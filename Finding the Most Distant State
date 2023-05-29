@@ -1,0 +1,111 @@
+#include <iostream>
+#include <vector>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <queue>
+#include <string>
+
+using namespace std;
+
+typedef vector<vector<int>> matrix;
+
+int encode(const matrix &m) {
+	int res = 0;
+	for (auto &row : m) {
+		for (auto &cell : row) {
+			res *= 10;
+			res += cell;
+		}
+	}
+	return res;
+}
+matrix decode(int x) {
+	matrix ret (3, vector<int>(3));
+	for (int i = 2; i >= 0; --i) {
+		for (int j = 2; j >= 0; --j) {
+			ret[i][j] = x%10;
+			x = x/10;
+		}
+	}
+	return ret;
+}
+
+pair<int, int> find0(const matrix &m) {
+	for (int i = 2; i >= 0; --i) {
+		for (int j = 2; j >= 0; --j) {
+			if (!m[i][j])
+				return {i, j};
+		}
+	}
+}
+
+bool isValid(int i, int j) {
+	return (i >= 0 && i < 3 && j >= 0 && j < 3);
+}
+
+vector<pair<int, char>> get_neb(int x) {
+	auto m = decode(x);
+	int i, j;
+	tie(i, j) = find0(m);
+	int di = 0; int dj = -1;
+	string s = "LURD";
+	vector<pair<int, char>> ret;
+	for (int k = 0; k < 4; k++) {
+		int ni = i+di;
+		int nj = j+dj;
+		if (isValid(ni, nj)) {
+			swap(m[i][j], m[ni][nj]);
+			ret.push_back(pair<int, char>(encode(m), s[k]));
+			swap(m[i][j], m[ni][nj]);
+		}
+		swap(di, dj);
+		if (k == 1) dj = 1;
+	}
+	return ret;
+}
+
+vector<tuple<int, int, char>> q; // current state, parent state, operation to get from parent state
+
+void BFS(int s) {
+	q = {{s, -1, -1}};
+	unordered_set<int> visited = {s}; // to avoid cycles
+	for (int f = 0; f < q.size(); f++) {
+		for (auto &[c,d] : get_neb(get<0>(q[f]))) {
+			if (!visited.insert(c).second) continue;
+			q.emplace_back(c, f, d);
+		}
+	}
+}
+
+void print(int index) {
+	if (index) {
+		print(get<1>(q[index]));
+		cout << get<2>(q[index]);
+	}
+}
+
+int main() {
+
+	matrix ret (3, vector<int>(3));
+	int t = 0, tc; cin >> tc;
+	while (tc--) {
+		cout << "Puzzle #" << ++t << "\n";
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				cin >> ret[i][j];
+			}
+		}
+		BFS(encode(ret));
+		for (auto &row : decode(get<0>(q.back()))) {
+			for (auto &cell : row) {
+				cout << cell << " \n"[&cell == &row.back()];
+			}
+		}
+		print(q.size()-1);
+		cout << "\n\n";
+	}
+
+	return 0;
+
+}
