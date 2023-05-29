@@ -1,0 +1,50 @@
+#include <iostream>
+#include <vector>
+#include <tuple>
+
+using namespace std;
+
+// Time limit 8000ms --> 1000ms
+// 1 <= n <= 10,000
+
+const int N = 2e4+3;
+int visited[N], vid; // global values initialized to zero by default
+
+vector<tuple<int, int, int>> q;
+
+void BFS(int m) {
+	q = {{1, -1, 1}};
+	visited[1] = ++vid;
+	if (m == 1) return;
+	for (int f = 0; f < q.size(); ++f) { // f is the parent
+		int s = get<0>(q[f]);
+		for (int d = 0; d < 2; d++) {
+			int ns = (s*10+d)%m; // padding with a zero or a one
+			if (visited[ns] == vid) continue;
+			visited[ns] = vid;
+			q.emplace_back(ns, f, d);
+			if (!ns) return; // ns == 0
+		}
+	}
+}
+
+void printRes(int index) {
+	if (~index) { // ~ means != -1
+		printRes(get<1>(q[index]));
+		cout << get<2>(q[index]);
+	}
+}
+
+int main() {
+
+	int t; cin >> t;
+	while (t--) {
+		int x; cin >> x;
+		BFS(x);
+		printRes(q.size()-1);
+		cout << "\n";
+	}
+
+	return 0;
+
+}
